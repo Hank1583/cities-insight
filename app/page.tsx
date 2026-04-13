@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { Wind, Zap, CloudRain, Droplets, Activity } from 'lucide-react'
 import MetricCard from '@/components/dashboard/MetricCard'
 import AlertCard from '@/components/dashboard/AlertCard'
