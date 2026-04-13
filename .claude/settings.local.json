@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(mkdir -p \"D:/7.Highlight/1.Project/4.php/cities-insight/config\")",
+      "Bash(mkdir -p \"D:/7.Highlight/1.Project/4.php/cities-insight/helpers\")",
+      "Bash(mkdir -p \"D:/7.Highlight/1.Project/4.php/cities-insight/routes\")",
+      "Bash(cat D:/7.Highlight/1.Project/5.web/cities-insight/app/cities/[cityCode]/page.tsx)",
+      "Bash(cat D:/7.Highlight/1.Project/5.web/cities-insight/app/indicators/[indicatorCode]/page.tsx)"
+    ]
+  }
+}
