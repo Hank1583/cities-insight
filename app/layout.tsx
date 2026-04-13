@@ -1,10 +1,7 @@
 import type { Metadata } from 'next'
-import { Geist } from 'next/font/google'
 import './globals.css'
 import AppSidebar from '@/components/layout/AppSidebar'
 import TopNavbar from '@/components/layout/TopNavbar'
-
-const geist = Geist({ subsets: ['latin'], variable: '--font-geist-sans' })
 
 export const metadata: Metadata = {
   title: 'Cities Insight - Taiwan Urban Data Platform',
@@ -13,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-TW" className={geist.variable}>
+    <html lang="zh-TW">
       <body className="flex h-screen overflow-hidden bg-slate-50">
         <AppSidebar />
         <div className="flex flex-col flex-1 overflow-hidden">
