@@ -1,6 +1,3 @@
-'use client'
-import dynamic from 'next/dynamic'
-
-export const LineTrendChart = dynamic(() => import('./LineTrendChart'), { ssr: false })
-export const BarRankingChart = dynamic(() => import('./BarRankingChart'), { ssr: false })
-export const CompareLineChart = dynamic(() => import('./CompareLineChart'), { ssr: false })
+export { default as LineTrendChart }  from './LineTrendChart'
+export { default as BarRankingChart } from './BarRankingChart'
+export { default as CompareLineChart } from './CompareLineChart'

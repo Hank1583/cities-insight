@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { LineTrendChart } from '@/components/charts'
+import LineTrendChart from '@/components/charts/LineTrendChart'
 import { TimeSeriesPoint } from '@/types/indicator'
 
 interface Props {

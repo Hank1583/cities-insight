@@ -1,9 +1,7 @@
 'use client'
-import dynamic from 'next/dynamic'
+import LineTrendChart  from './LineTrendChart'
+import BarRankingChart from './BarRankingChart'
 import type { ApiTimeSeries } from '@/lib/api/client'
-
-const LineTrendChart  = dynamic(() => import('./LineTrendChart'),  { ssr: false })
-const BarRankingChart = dynamic(() => import('./BarRankingChart'), { ssr: false })
 
 interface Props {
   series:          ApiTimeSeries[]
