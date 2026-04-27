@@ -1,117 +1,289 @@
 'use client'
-import { useState, useEffect } from 'react'
-import { AlertTriangle, XCircle, Info, CheckCircle, Filter } from 'lucide-react'
+export const runtime = 'edge';
+import { useState, useEffect, useCallback } from 'react'
+import { Bell, Plus, Trash2, ToggleLeft, ToggleRight, Clock, CheckCircle, AlertTriangle, MessageSquare } from 'lucide-react'
 import PageHeader from '@/components/layout/PageHeader'
-import { apiFetch, ApiAlertLog } from '@/lib/api/client'
+import { apiFetch, ApiCity, ApiIndicator } from '@/lib/api/client'
 
-const SEV_CONFIG = {
-  low:      { icon: Info,          bg: 'bg-sky-50',    text: 'text-sky-700',    border: 'border-sky-200',    badge: 'bg-sky-100 text-sky-700',    label: '資訊' },
-  medium:   { icon: AlertTriangle, bg: 'bg-amber-50',  text: 'text-amber-700',  border: 'border-amber-200',  badge: 'bg-amber-100 text-amber-700',  label: '注意' },
-  high:     { icon: AlertTriangle, bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', badge: 'bg-orange-100 text-orange-700', label: '高' },
-  critical: { icon: XCircle,       bg: 'bg-red-50',    text: 'text-red-700',    border: 'border-red-200',    badge: 'bg-red-100 text-red-700',    label: '緊急' },
-  warning:  { icon: AlertTriangle, bg: 'bg-amber-50',  text: 'text-amber-700',  border: 'border-amber-200',  badge: 'bg-amber-100 text-amber-700',  label: '警告' },
+// 可設定警示的指標（有實際資料的）
+const ALERTABLE_INDICATORS = ['aqi', 'pm25', 'weather_temp', 'rainfall', 'reservoir_storage', 'electricity_monthly', 'earthquake_count']
+
+const OP_LABELS: Record<string, string> = { gt: '高於', lt: '低於', gte: '高於等於', lte: '低於等於' }
+
+interface AlertRule {
+  id: number
+  cityCode: string; cityName: string
+  indicatorCode: string; indicatorName: string; unit: string
+  conditionOp: string; threshold: number
+  cooldownHours: number; isActive: boolean
+  lastTriggeredAt: string | null; createdAt: string
+}
+
+interface AlertLog {
+  id: number
+  cityName: string; indicatorName: string; unit: string
+  conditionOp: string; threshold: number; triggeredValue: number
+  sentAt: string
 }
 
 export default function AlertsPage() {
-  const [alerts, setAlerts] = useState<ApiAlertLog[]>([])
-  const [loading, setLoading] = useState(true)
-  const [severityFilter, setSeverityFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [userId, setUserId]         = useState('')
+  const [inputId, setInputId]       = useState('')
+  const [rules, setRules]           = useState<AlertRule[]>([])
+  const [logs, setLogs]             = useState<AlertLog[]>([])
+  const [cities, setCities]         = useState<ApiCity[]>([])
+  const [indicators, setIndicators] = useState<ApiIndicator[]>([])
+  const [tab, setTab]               = useState<'rules'|'logs'|'guide'>('guide')
+  const [loading, setLoading]       = useState(false)
+
+  // 新增表單
+  const [form, setForm] = useState({ city: '', indicator: 'aqi', op: 'gt', threshold: '', cooldown: '4' })
+  const [adding, setAdding] = useState(false)
 
   useEffect(() => {
-    const params = new URLSearchParams()
-    if (severityFilter !== 'all') params.set('severity', severityFilter)
-    if (statusFilter !== 'all') params.set('status', statusFilter)
-    params.set('limit', '50')
-    setLoading(true)
-    apiFetch<ApiAlertLog[]>(`/alerts/logs?${params.toString()}`)
-      .then(data => { setAlerts(data); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [severityFilter, statusFilter])
+    apiFetch<ApiCity[]>('/cities').then(setCities)
+    apiFetch<ApiIndicator[]>('/indicators').then(data =>
+      setIndicators(data.filter(i => ALERTABLE_INDICATORS.includes(i.code)))
+    )
+    // 從 localStorage 讀上次輸入的 ID
+    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('lineUserId') : ''
+    if (saved) { setUserId(saved); setInputId(saved) }
+  }, [])
 
-  const activeCount = alerts.filter(a => a.status === 'open').length
+  const loadData = useCallback(() => {
+    if (!userId) return
+    setLoading(true)
+    Promise.all([
+      apiFetch<AlertRule[]>(`/alerts?line_user_id=${encodeURIComponent(userId)}`),
+      apiFetch<AlertLog[]>(`/alerts/logs?line_user_id=${encodeURIComponent(userId)}&limit=30`),
+    ]).then(([r, l]) => {
+      setRules(r); setLogs(l); setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [userId])
+
+  useEffect(() => { if (userId) loadData() }, [userId, loadData])
+
+  function confirmId() {
+    const id = inputId.trim()
+    if (!id) return
+    localStorage.setItem('lineUserId', id)
+    setUserId(id)
+    setTab('rules')
+  }
+
+  async function addRule() {
+    if (!form.city || !form.threshold || !userId) return
+    setAdding(true)
+    try {
+      await apiFetch('/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          line_user_id:   userId,
+          city_code:      form.city,
+          indicator_code: form.indicator,
+          condition_op:   form.op,
+          threshold:      parseFloat(form.threshold),
+          cooldown_hours: parseInt(form.cooldown),
+        }),
+      })
+      setForm(f => ({ ...f, threshold: '' }))
+      loadData()
+    } catch { /* error */ }
+    setAdding(false)
+  }
+
+  async function deleteRule(id: number) {
+    await apiFetch(`/alerts/${id}?line_user_id=${encodeURIComponent(userId)}`, { method: 'DELETE' })
+    loadData()
+  }
+
+  async function toggleRule(id: number) {
+    await apiFetch(`/alerts/${id}/toggle?line_user_id=${encodeURIComponent(userId)}`, { method: 'PUT' })
+    loadData()
+  }
+
+  const activeCount = rules.filter(r => r.isActive).length
 
   return (
-    <div className="max-w-5xl space-y-6">
-      <PageHeader title="示警紀錄" subtitle={`${activeCount} 個進行中的告警`} />
+    <div className="max-w-4xl space-y-6">
+      <PageHeader title="LINE 警示設定" subtitle="設定條件，達標時自動推播 LINE 通知" />
 
-      <div className="grid grid-cols-4 gap-4">
-        {[
-          { label: '進行中', count: alerts.filter(a => a.status === 'open').length,     color: 'text-red-600',     bg: 'bg-red-50' },
-          { label: '緊急',   count: alerts.filter(a => a.severity === 'critical').length, color: 'text-red-600',     bg: 'bg-red-50' },
-          { label: '高風險', count: alerts.filter(a => a.severity === 'high').length,     color: 'text-orange-600',  bg: 'bg-orange-50' },
-          { label: '已解除', count: alerts.filter(a => a.status === 'closed').length,     color: 'text-emerald-600', bg: 'bg-emerald-50' },
-        ].map(s => (
-          <div key={s.label} className={`${s.bg} rounded-xl p-4 text-center`}>
-            <div className={`text-2xl font-bold ${s.color}`}>{s.count}</div>
-            <div className="text-sm text-slate-600 mt-1">{s.label}</div>
-          </div>
+      {/* LINE User ID 輸入區 */}
+      <div className="bg-white rounded-xl border border-slate-200 p-5">
+        <div className="flex items-center gap-3 mb-3">
+          <MessageSquare className="w-5 h-5 text-sky-500" />
+          <h3 className="font-semibold text-slate-700">你的 LINE User ID</h3>
+          {userId && <span className="ml-auto text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">已綁定</span>}
+        </div>
+        <div className="flex gap-2">
+          <input
+            value={inputId} onChange={e => setInputId(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && confirmId()}
+            placeholder="貼上你的 LINE User ID（Uxxxxxxxxxxxx）"
+            className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 outline-none focus:border-sky-400"
+          />
+          <button onClick={confirmId}
+            className="px-4 py-2 bg-sky-500 text-white rounded-lg text-sm font-medium hover:bg-sky-600 transition-colors">
+            確認
+          </button>
+        </div>
+        {!userId && (
+          <p className="text-xs text-slate-400 mt-2">
+            不知道 ID？加 LINE Bot 好友後傳「ID」，Bot 會回覆你的 User ID。
+          </p>
+        )}
+      </div>
+
+      {/* Tab */}
+      <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit">
+        {([['guide','使用說明'],['rules','警示規則'],['logs','推播記錄']] as const).map(([k,l]) => (
+          <button key={k} onClick={() => setTab(k)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === k ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+            {k === 'rules' && userId ? `${l} (${activeCount})` : l}
+          </button>
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 bg-white rounded-xl border border-slate-200 p-4">
-        <Filter className="w-4 h-4 text-slate-400" />
-        <div className="flex gap-2">
-          {['all','critical','high','medium','low'].map(v => {
-            const cfg = SEV_CONFIG[v as keyof typeof SEV_CONFIG]
-            return (
-              <button key={v} onClick={() => setSeverityFilter(v)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${severityFilter === v ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                {v === 'all' ? '全部嚴重度' : cfg?.label ?? v}
-              </button>
-            )
-          })}
+      {/* 使用說明 */}
+      {tab === 'guide' && (
+        <div className="bg-white rounded-xl border border-slate-200 p-6 flex flex-col items-center gap-4">
+          <MessageSquare className="w-10 h-10 text-sky-500" />
+          <p className="text-slate-600 text-sm text-center">請先完成 LINE 會員綁定，即可使用警示推播功能。</p>
+          <a
+            href="https://www.highlight.url.tw/line_bot/member_bind.php"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-6 py-2.5 bg-sky-500 text-white rounded-lg text-sm font-medium hover:bg-sky-600 transition-colors"
+          >
+            前往 LINE 會員綁定
+          </a>
         </div>
-        <div className="flex gap-2 ml-4">
-          {[['all','全部狀態'],['open','進行中'],['closed','已解除']].map(([v,l]) => (
-            <button key={v} onClick={() => setStatusFilter(v)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${statusFilter === v ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-              {l}
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
-      {loading ? (
-        <div className="flex items-center justify-center h-32 text-slate-400">
-          <div className="w-6 h-6 border-2 border-sky-500 border-t-transparent rounded-full animate-spin mr-2" />載入中...
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {alerts.map(alert => {
-            const cfg = SEV_CONFIG[alert.severity as keyof typeof SEV_CONFIG] ?? SEV_CONFIG.low
-            const Icon = cfg.icon
-            return (
-              <div key={alert.id} className={`bg-white rounded-xl border ${cfg.border} p-5 flex gap-4`}>
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${cfg.bg}`}>
-                  <Icon className={`w-5 h-5 ${cfg.text}`} />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 flex-wrap mb-2">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${cfg.badge}`}>{cfg.label}</span>
-                    <span className="font-semibold text-slate-800">{alert.city_name_zh || '全台'}</span>
-                    <span className="text-sm text-slate-500">{alert.indicator_name_zh}</span>
-                    <span className={`ml-auto text-xs px-2 py-0.5 rounded-full font-medium ${alert.status === 'open' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                      {alert.status === 'open' ? '進行中' : '已解除'}
-                    </span>
+      {/* 警示規則管理 */}
+      {tab === 'rules' && userId && (
+        <div className="space-y-4">
+          {/* 新增規則 */}
+          <div className="bg-white rounded-xl border border-slate-200 p-5">
+            <h3 className="font-semibold text-slate-700 mb-4 flex items-center gap-2">
+              <Plus className="w-4 h-4" /> 新增警示規則
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <select value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
+                className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 outline-none focus:border-sky-400">
+                <option value="">選擇縣市</option>
+                {cities.map(c => <option key={c.code} value={c.code}>{c.name_zh}</option>)}
+              </select>
+              <select value={form.indicator} onChange={e => setForm(f => ({ ...f, indicator: e.target.value }))}
+                className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 outline-none focus:border-sky-400">
+                {indicators.map(i => <option key={i.code} value={i.code}>{i.name_zh}</option>)}
+              </select>
+              <select value={form.op} onChange={e => setForm(f => ({ ...f, op: e.target.value }))}
+                className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 outline-none focus:border-sky-400">
+                {Object.entries(OP_LABELS).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+              <input type="number" value={form.threshold} onChange={e => setForm(f => ({ ...f, threshold: e.target.value }))}
+                placeholder="門檻值"
+                className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 outline-none focus:border-sky-400" />
+              <select value={form.cooldown} onChange={e => setForm(f => ({ ...f, cooldown: e.target.value }))}
+                className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 outline-none focus:border-sky-400">
+                {[[1,'1 小時'],[2,'2 小時'],[4,'4 小時'],[8,'8 小時'],[24,'24 小時']].map(([v,l]) => (
+                  <option key={v} value={v}>{l}後可再通知</option>
+                ))}
+              </select>
+              <button onClick={addRule} disabled={adding || !form.city || !form.threshold}
+                className="bg-sky-500 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-sky-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                <Plus className="w-4 h-4" />{adding ? '新增中...' : '新增規則'}
+              </button>
+            </div>
+          </div>
+
+          {/* 規則列表 */}
+          {loading ? (
+            <div className="flex items-center justify-center h-24 text-slate-400">
+              <div className="w-5 h-5 border-2 border-sky-500 border-t-transparent rounded-full animate-spin mr-2" />載入中...
+            </div>
+          ) : rules.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-xl border border-slate-200 text-slate-400">
+              <Bell className="w-10 h-10 mx-auto mb-2 opacity-30" />
+              <p>尚未設定任何警示規則</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {rules.map(rule => (
+                <div key={rule.id} className={`bg-white rounded-xl border p-4 flex items-center gap-4 transition-opacity ${rule.isActive ? 'border-slate-200' : 'border-slate-100 opacity-50'}`}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-slate-800">{rule.cityName}</span>
+                      <span className="text-slate-400">·</span>
+                      <span className="text-slate-600">{rule.indicatorName}</span>
+                      <span className="text-sky-600 font-medium">{OP_LABELS[rule.conditionOp]}</span>
+                      <span className="font-bold text-slate-800">{rule.threshold} {rule.unit}</span>
+                    </div>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
+                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" />冷卻 {rule.cooldownHours}h</span>
+                      {rule.lastTriggeredAt && <span>上次觸發：{rule.lastTriggeredAt.slice(0,16)}</span>}
+                    </div>
                   </div>
-                  <p className="text-sm text-slate-700">{alert.message || alert.title}</p>
-                  {(alert.trigger_value != null || alert.threshold_value != null) && (
-                    <p className="text-xs text-slate-500 mt-1">
-                      當前值：{alert.trigger_value} {alert.unit}，門檻：{alert.threshold_value} {alert.unit}
-                    </p>
-                  )}
-                  <p className="text-xs text-slate-400 mt-1">{alert.created_at?.slice(0, 16)}</p>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button onClick={() => toggleRule(rule.id)} title={rule.isActive ? '停用' : '啟用'}
+                      className="text-slate-400 hover:text-sky-500 transition-colors">
+                      {rule.isActive
+                        ? <ToggleRight className="w-6 h-6 text-sky-500" />
+                        : <ToggleLeft className="w-6 h-6" />}
+                    </button>
+                    <button onClick={() => deleteRule(rule.id)} title="刪除"
+                      className="text-slate-300 hover:text-red-500 transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )
-          })}
-          {alerts.length === 0 && (
-            <div className="text-center py-12 text-slate-400">
-              <CheckCircle className="w-12 h-12 mx-auto mb-3 text-emerald-300" />
-              <p>目前無告警記錄</p>
+              ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* 推播記錄 */}
+      {tab === 'logs' && userId && (
+        <div className="space-y-3">
+          {loading ? (
+            <div className="flex items-center justify-center h-24 text-slate-400">
+              <div className="w-5 h-5 border-2 border-sky-500 border-t-transparent rounded-full animate-spin mr-2" />載入中...
+            </div>
+          ) : logs.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-xl border border-slate-200 text-slate-400">
+              <CheckCircle className="w-10 h-10 mx-auto mb-2 opacity-30" />
+              <p>尚無推播記錄</p>
+            </div>
+          ) : (
+            logs.map(log => (
+              <div key={log.id} className="bg-white rounded-xl border border-amber-200 p-4 flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-slate-800">{log.cityName}</span>
+                    <span className="text-slate-500">{log.indicatorName}</span>
+                    <span className="text-amber-600 font-bold">{log.triggeredValue} {log.unit}</span>
+                    <span className="text-slate-400 text-xs">（門檻 {OP_LABELS[log.conditionOp]} {log.threshold}）</span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">{log.sentAt?.slice(0, 16)}</p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* 未輸入 ID 時的提示 */}
+      {tab !== 'guide' && !userId && (
+        <div className="text-center py-16 text-slate-400">
+          <Bell className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p>請先輸入你的 LINE User ID</p>
+          <button onClick={() => setTab('guide')} className="mt-3 text-sky-500 text-sm hover:underline">
+            查看使用說明
+          </button>
         </div>
       )}
     </div>

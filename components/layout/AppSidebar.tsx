@@ -1,9 +1,10 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 import {
   LayoutDashboard, MapPin, GitCompare, BarChart2,
-  Bell, FileText, Zap
+  Bell, FileText
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -22,9 +23,7 @@ export default function AppSidebar() {
       {/* Logo */}
       <div className="px-5 py-5 border-b border-slate-800">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-sky-500 flex items-center justify-center">
-            <Zap className="w-4 h-4 text-white" />
-          </div>
+          <Image src="/logo.svg" alt="Cities Insight" width={28} height={28} className="flex-shrink-0" />
           <div>
             <div className="text-white font-bold text-sm leading-tight">Cities Insight</div>
             <div className="text-slate-400 text-xs">Taiwan Urban Data</div>

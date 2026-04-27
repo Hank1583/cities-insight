@@ -16,6 +16,14 @@ async function fetchSeries(cityCode: string, indicator: string): Promise<ApiTime
   }
 }
 
+async function fetchSeriesMonthly(cityCode: string, indicator: string): Promise<ApiTimeSeries[]> {
+  try {
+    return await apiFetch<ApiTimeSeries[]>(`/cities/${cityCode}/indicators/${indicator}?range=365d&granularity=month`)
+  } catch {
+    return []
+  }
+}
+
 export default async function CityPage({ params }: Props) {
   const { cityCode } = await params
 
@@ -30,7 +38,7 @@ export default async function CityPage({ params }: Props) {
   const city = data.city
   const metrics = data.metrics
 
-  const [aqiSeries, tempSeries, rainfallSeries, reservoirSeries, electricitySeries, marginSeries] =
+  const [aqiSeries, tempSeries, rainfallSeries, reservoirSeries, electricitySeries, marginSeries, electricityMonthlySeries] =
     await Promise.all([
       fetchSeries(cityCode, 'aqi'),
       fetchSeries(cityCode, 'weather_temp'),
@@ -38,16 +46,18 @@ export default async function CityPage({ params }: Props) {
       fetchSeries(cityCode, 'reservoir_storage'),
       fetchSeries(cityCode, 'electricity_load'),
       fetchSeries(cityCode, 'reserve_margin'),
+      fetchSeriesMonthly(cityCode, 'electricity_monthly'),
     ])
 
   const metricsForCard = {
-    aqi:               metrics.aqi?.value ?? 0,
-    pm25:              metrics.pm25?.value ?? 0,
-    temperature:       metrics.weather_temp?.value ?? 0,
-    rainfall:          metrics.rainfall?.value ?? 0,
-    reservoir_storage: metrics.reservoir_storage?.value ?? 0,
-    electricity_load:  metrics.electricity_load?.value ?? 0,
-    reserve_margin:    metrics.reserve_margin?.value ?? 0,
+    aqi:                  metrics.aqi?.value ?? 0,
+    pm25:                 metrics.pm25?.value ?? 0,
+    temperature:          metrics.weather_temp?.value ?? 0,
+    rainfall:             metrics.rainfall?.value ?? 0,
+    reservoir_storage:    metrics.reservoir_storage?.value ?? 0,
+    electricity_load:     metrics.electricity_load?.value ?? 0,
+    reserve_margin:       metrics.reserve_margin?.value ?? 0,
+    electricity_monthly:  metrics.electricity_monthly?.value ?? 0,
   }
 
   return (
@@ -75,12 +85,14 @@ export default async function CityPage({ params }: Props) {
       <CityMetricSummary metrics={metricsForCard} />
 
       <CityIndicatorTabs
+        cityCode={cityCode}
         aqiSeries={aqiSeries}
         tempSeries={tempSeries}
         rainfallSeries={rainfallSeries}
         reservoirSeries={reservoirSeries}
         electricitySeries={electricitySeries}
         marginSeries={marginSeries}
+        electricityMonthlySeries={electricityMonthlySeries}
       />
     </div>
   )

@@ -14,13 +14,24 @@ export default function CompareLineChart({ data, cityNames, unit = '' }: Compare
   const cityCodes = Object.keys(data)
   if (cityCodes.length === 0) return null
 
-  // Merge all series by time
-  const times = data[cityCodes[0]].map(d => d.time.slice(5))
-  const merged = times.map((time, i) => {
-    const row: Record<string, string | number> = { time }
-    for (const code of cityCodes) {
-      row[code] = data[code][i]?.value ?? 0
-    }
+  // Collect all unique time keys across all cities
+  const timeSet = new Set<string>()
+  for (const code of cityCodes) {
+    for (const pt of data[code]) timeSet.add(pt.time)
+  }
+  const allTimes = Array.from(timeSet).sort()
+  if (allTimes.length === 0) return null
+
+  // Build lookup: city -> time -> value
+  const lookup: Record<string, Record<string, number>> = {}
+  for (const code of cityCodes) {
+    lookup[code] = {}
+    for (const pt of data[code]) lookup[code][pt.time] = pt.value
+  }
+
+  const merged = allTimes.map(t => {
+    const row: Record<string, string | number> = { time: t.slice(5) }
+    for (const code of cityCodes) row[code] = lookup[code][t] ?? 0
     return row
   })
 
@@ -36,7 +47,7 @@ export default function CompareLineChart({ data, cityNames, unit = '' }: Compare
         />
         <Legend formatter={(v) => cityNames[v] ?? v} wrapperStyle={{ fontSize: 12 }} />
         {cityCodes.map((code, i) => (
-          <Line key={code} type="monotone" dataKey={code} stroke={COLORS[i % COLORS.length]} strokeWidth={2} dot={false} />
+          <Line key={code} type="monotone" dataKey={code} stroke={COLORS[i % COLORS.length]} strokeWidth={2} dot={allTimes.length <= 3} />
         ))}
       </LineChart>
     </ResponsiveContainer>

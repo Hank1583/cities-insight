@@ -1,13 +1,13 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'https://www.highlight.url.tw/cities-insight/api'
 
-export async function apiFetch<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, { cache: 'no-store' })
+export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, { cache: 'no-store', ...options })
 
   const text = await res.text()
   // console.log('API response:', text)
 
   if (!res.ok) throw new Error(`API error ${res.status}: ${path}`)
-  
+
   return JSON.parse(text)
 }
 

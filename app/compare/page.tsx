@@ -7,7 +7,8 @@ import { apiFetch, ApiCity, ApiIndicator, ApiCompare } from '@/lib/api/client'
 
 const DEFAULT_CITIES = ['taipei', 'taichung', 'kaohsiung', 'tainan', 'taoyuan']
 const DEFAULT_INDICATOR = 'aqi'
-const COMPARE_INDICATORS = ['aqi', 'pm25', 'weather_temp', 'rainfall', 'reservoir_storage', 'electricity_load', 'reserve_margin']
+// electricity_load / reserve_margin 是全國指標，各縣市數值相同，不適合城市比較
+const COMPARE_INDICATORS = ['aqi', 'pm25', 'weather_temp', 'rainfall', 'reservoir_storage', 'electricity_monthly']
 
 export default function ComparePage() {
   const [cities, setCities] = useState<ApiCity[]>([])
@@ -26,7 +27,7 @@ export default function ComparePage() {
   const fetchCompare = useCallback(() => {
     if (selectedCities.length === 0) return
     setLoading(true)
-    apiFetch<ApiCompare>(`/compare?indicator=${indicator}&cities=${selectedCities.join(',')}&range=${range}d&granularity=day`)
+    apiFetch<ApiCompare>(`/compare?indicator=${indicator}&cities=${selectedCities.join(',')}&range=${indicator === 'electricity_monthly' ? '365d&granularity=month' : `${range}d&granularity=day`}`)
       .then(data => { setCompareData(data); setLoading(false) })
       .catch(() => setLoading(false))
   }, [indicator, selectedCities, range])
@@ -84,17 +85,19 @@ export default function ComparePage() {
           </div>
         </div>
 
-        <div>
-          <label className="text-sm font-medium text-slate-600 block mb-2">時間範圍</label>
-          <div className="flex gap-2">
-            {[[7,'7天'],[30,'30天'],[90,'90天']] .map(([v,l]) => (
-              <button key={v} onClick={() => setRange(Number(v))}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${range === Number(v) ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                {l}
-              </button>
-            ))}
+        {indicator !== 'electricity_monthly' && (
+          <div>
+            <label className="text-sm font-medium text-slate-600 block mb-2">時間範圍</label>
+            <div className="flex gap-2">
+              {([[7,'7天'],[30,'30天'],[90,'90天']] as [number,string][]).map(([v,l]) => (
+                <button key={v} onClick={() => setRange(Number(v))}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${range === Number(v) ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                  {l}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {loading && (
@@ -106,7 +109,8 @@ export default function ComparePage() {
       {!loading && compareData && Object.keys(compareData.series).length > 0 && (
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <h3 className="font-semibold text-slate-700 mb-4">
-            {indicatorInfo?.name_zh ?? indicator} 比較 — 近 {range} 天
+            {indicatorInfo?.name_zh ?? indicator} 比較
+            {indicator === 'electricity_monthly' ? ' — 近 12 個月' : ` — 近 ${range} 天`}
             <span className="text-sm font-normal text-slate-400 ml-2">({indicatorInfo?.unit})</span>
           </h3>
           <CompareLineChart data={compareData.series} cityNames={cityNames} unit={indicatorInfo?.unit ?? ''} />

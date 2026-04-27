@@ -1,5 +1,5 @@
 'use client'
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts'
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, LabelList } from 'recharts'
 
 interface BarRankingChartProps {
   data: { label: string; value: number }[]
@@ -12,11 +12,11 @@ export default function BarRankingChart({ data, color = '#0ea5e9', unit = '', ho
   const sorted = [...data].sort((a, b) => b.value - a.value)
   if (horizontal) {
     return (
-      <ResponsiveContainer width="100%" height={Math.max(200, sorted.length * 36)}>
-        <BarChart data={sorted} layout="vertical" margin={{ top: 5, right: 30, left: 60, bottom: 5 }}>
+      <ResponsiveContainer width="100%" height={Math.max(200, sorted.length * 40)}>
+        <BarChart data={sorted} layout="vertical" margin={{ top: 5, right: 70, left: 60, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
           <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-          <YAxis type="category" dataKey="label" tick={{ fontSize: 12, fill: '#475569' }} tickLine={false} axisLine={false} width={55} />
+          <YAxis type="category" dataKey="label" tick={{ fontSize: 12, fill: '#334155' }} tickLine={false} axisLine={false} width={60} />
           <Tooltip
             contentStyle={{ background: '#1e293b', border: 'none', borderRadius: 8, color: '#f8fafc', fontSize: 12 }}
             formatter={(v) => [`${v}${unit}`, '數值']}
@@ -25,6 +25,12 @@ export default function BarRankingChart({ data, color = '#0ea5e9', unit = '', ho
             {sorted.map((_, i) => (
               <Cell key={i} fill={i === 0 ? color : `${color}88`} />
             ))}
+            <LabelList
+              dataKey="value"
+              position="right"
+              style={{ fill: '#334155', fontSize: 11, fontWeight: 600 }}
+              formatter={(v: number) => `${typeof v === 'number' ? v.toFixed(v > 100 ? 0 : 1) : v}${unit}`}
+            />
           </Bar>
         </BarChart>
       </ResponsiveContainer>

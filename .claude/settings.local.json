@@ -7,7 +7,25 @@
       "Bash(mkdir -p \"D:/7.Highlight/1.Project/4.php/cities-insight/helpers\")",
       "Bash(mkdir -p \"D:/7.Highlight/1.Project/4.php/cities-insight/routes\")",
       "Bash(cat D:/7.Highlight/1.Project/5.web/cities-insight/app/cities/[cityCode]/page.tsx)",
-      "Bash(cat D:/7.Highlight/1.Project/5.web/cities-insight/app/indicators/[indicatorCode]/page.tsx)"
+      "Bash(cat D:/7.Highlight/1.Project/5.web/cities-insight/app/indicators/[indicatorCode]/page.tsx)",
+      "WebSearch",
+      "WebFetch(domain:data.gov.tw)",
+      "WebFetch(domain:opendata.wra.gov.tw)",
+      "WebFetch(domain:data.moenv.gov.tw)",
+      "WebFetch(domain:fhy.wra.gov.tw)",
+      "WebFetch(domain:www.taipower.com.tw)",
+      "WebFetch(domain:service.taipower.com.tw)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:opendata.cwa.gov.tw)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:data.wra.gov.tw)",
+      "WebFetch(domain:gist.github.com)",
+      "WebFetch(domain:opendata.epa.gov.tw)",
+      "WebFetch(domain:water.taiwanstat.com)",
+      "WebFetch(domain:www.hlbh.hlc.edu.tw)",
+      "WebFetch(domain:hackmd.io)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "WebFetch(domain:data.taipei)"
     ]
   }
 }
