@@ -1,3 +1,4 @@
+'use client'
 import dynamic from 'next/dynamic'
 
 export const LineTrendChart = dynamic(() => import('./LineTrendChart'), { ssr: false })

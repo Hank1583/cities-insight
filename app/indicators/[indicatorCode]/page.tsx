@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Info } from 'lucide-react'
 import { apiFetch, ApiIndicator, ApiTimeSeries } from '@/lib/api/client'
-import { LineTrendChart, BarRankingChart } from '@/components/charts'
+import IndicatorCharts from '@/components/charts/IndicatorCharts'
 
 // 全國性指標：所有縣市儲存相同值（全台電網統計），排行無意義
 const NATIONAL_INDICATORS = ['electricity_load', 'reserve_margin']
@@ -89,22 +89,14 @@ export default async function IndicatorPage({ params }: Props) {
         </div>
       )}
 
-      {series.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <h3 className="font-semibold text-slate-700 mb-4">
-            {isNational ? '全國趨勢' : '台北市趨勢'} —
-            {isMonthly ? ' 近 12 個月' : ' 近 30 天'}
-          </h3>
-          <LineTrendChart data={series} label={indicator.name_zh} unit={indicator.unit} color="#0ea5e9" />
-        </div>
-      )}
-
-      {rankingChartData.length > 0 && !isNational && (
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <h3 className="font-semibold text-slate-700 mb-4">各城市最新值排行</h3>
-          <BarRankingChart data={rankingChartData} unit={indicator.unit} horizontal color="#0ea5e9" />
-        </div>
-      )}
+      <IndicatorCharts
+        series={series}
+        rankingData={rankingChartData}
+        indicatorNameZh={indicator.name_zh}
+        unit={indicator.unit}
+        isNational={isNational}
+        isMonthly={isMonthly}
+      />
     </div>
   )
 }
