@@ -3,8 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Info } from 'lucide-react'
 import { apiFetch, ApiIndicator, ApiTimeSeries } from '@/lib/api/client'
-import LineTrendChart from '@/components/charts/LineTrendChart'
-import BarRankingChart from '@/components/charts/BarRankingChart'
+import { LineTrendChart, BarRankingChart } from '@/components/charts'
 
 // 全國性指標：所有縣市儲存相同值（全台電網統計），排行無意義
 const NATIONAL_INDICATORS = ['electricity_load', 'reserve_margin']

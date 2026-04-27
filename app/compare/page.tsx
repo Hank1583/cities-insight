@@ -2,7 +2,7 @@
 export const runtime = 'edge';
 import { useState, useEffect, useCallback } from 'react'
 import PageHeader from '@/components/layout/PageHeader'
-import CompareLineChart from '@/components/charts/CompareLineChart'
+import { CompareLineChart } from '@/components/charts'
 import { apiFetch, ApiCity, ApiIndicator, ApiCompare } from '@/lib/api/client'
 
 const DEFAULT_CITIES = ['taipei', 'taichung', 'kaohsiung', 'tainan', 'taoyuan']
