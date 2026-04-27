@@ -29,7 +29,7 @@ export default function BarRankingChart({ data, color = '#0ea5e9', unit = '', ho
               dataKey="value"
               position="right"
               style={{ fill: '#334155', fontSize: 11, fontWeight: 600 }}
-              formatter={(v: number) => `${typeof v === 'number' ? v.toFixed(v > 100 ? 0 : 1) : v}${unit}`}
+              formatter={(v: unknown) => `${typeof v === 'number' ? v.toFixed(v > 100 ? 0 : 1) : v}${unit}`}
             />
           </Bar>
         </BarChart>
