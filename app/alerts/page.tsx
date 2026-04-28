@@ -1,5 +1,4 @@
 'use client'
-export const runtime = 'edge';
 import { useState, useEffect, useCallback } from 'react'
 import { Bell, Plus, Trash2, ToggleLeft, ToggleRight, Clock, CheckCircle, AlertTriangle, MessageSquare } from 'lucide-react'
 import PageHeader from '@/components/layout/PageHeader'

@@ -1,4 +1,3 @@
-export const runtime = 'edge';
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { MapPin, Users, Maximize2, Clock, ArrowLeft } from 'lucide-react'

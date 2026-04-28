@@ -1,5 +1,4 @@
 'use client'
-export const runtime = 'edge';
 import { useState, useEffect } from 'react'
 import { FileText, Send, Clock, CheckCircle, Download, Plus, Users } from 'lucide-react'
 import PageHeader from '@/components/layout/PageHeader'
