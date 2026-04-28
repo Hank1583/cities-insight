@@ -6,6 +6,7 @@ import TopNavbar from '@/components/layout/TopNavbar'
 export const metadata: Metadata = {
   title: 'Cities Insight - Taiwan Urban Data Platform',
   description: '探索台灣各縣市的環境、能源、水資源與經濟趨勢',
+  icons: { icon: '/favicon.ico' },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
