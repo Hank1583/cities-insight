@@ -1,54 +1,69 @@
+'use client'
+import { useState, useEffect } from 'react'
 import { Wind, Zap, CloudRain, Droplets, Activity } from 'lucide-react'
 import MetricCard from '@/components/dashboard/MetricCard'
 import AlertCard from '@/components/dashboard/AlertCard'
 import Link from 'next/link'
 import { apiFetch, ApiCity, ApiSummary, ApiAlertLog } from '@/lib/api/client'
 
-export default async function DashboardPage() {
-  let cities: ApiCity[] = []
-  let alerts: ApiAlertLog[] = []
-  let summaries: ApiSummary[] = []
+const SEV_MAP: Record<string, 'low' | 'medium' | 'high' | 'danger'> = {
+  low: 'low', medium: 'medium', high: 'high', critical: 'danger',
+}
 
-  try {
-    cities = await apiFetch<ApiCity[]>('/cities')
-    alerts = await apiFetch<ApiAlertLog[]>('/alerts?limit=4')
-    summaries = await Promise.all(
-      cities.slice(0, 22).map(c => apiFetch<ApiSummary>(`/cities/${c.code}/summary`))
-    )
-  } catch {
-    // fallback: show empty state
-  }
+export default function DashboardPage() {
+  const [cities, setCities] = useState<ApiCity[]>([])
+  const [alerts, setAlerts] = useState<ApiAlertLog[]>([])
+  const [summaries, setSummaries] = useState<ApiSummary[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const [c, a] = await Promise.all([
+          apiFetch<ApiCity[]>('/cities'),
+          apiFetch<ApiAlertLog[]>('/alerts?limit=4'),
+        ])
+        setCities(c)
+        setAlerts(a)
+        const s = await Promise.all(
+          c.slice(0, 22).map(city => apiFetch<ApiSummary>(`/cities/${city.code}/summary`))
+        )
+        setSummaries(s)
+      } catch {
+        // 保持空陣列
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [])
 
   const getVal = (s: ApiSummary, key: string) => s.metrics[key]?.value ?? 0
 
   const validSummaries = summaries.filter(s => Object.keys(s.metrics).length > 0)
 
   const avgAqi = validSummaries.length
-    ? Math.round(validSummaries.reduce((acc, s) => acc + getVal(s, 'aqi'), 0) / validSummaries.length)
+    ? Math.round(validSummaries.reduce((acc, s) => acc + (getVal(s, 'aqi') as number), 0) / validSummaries.length)
     : 0
   const avgReservoir = validSummaries.length
-    ? (validSummaries.reduce((acc, s) => acc + getVal(s, 'reservoir_storage'), 0) / validSummaries.length).toFixed(1)
+    ? (validSummaries.reduce((acc, s) => acc + (getVal(s, 'reservoir_storage') as number), 0) / validSummaries.length).toFixed(1)
     : '0'
-  const totalElectricity = validSummaries.reduce((acc, s) => acc + getVal(s, 'electricity_load'), 0)
+  const totalElectricity = validSummaries.reduce((acc, s) => acc + (getVal(s, 'electricity_load') as number), 0)
   const avgMargin = validSummaries.length
-    ? (validSummaries.reduce((acc, s) => acc + getVal(s, 'reserve_margin'), 0) / validSummaries.length).toFixed(1)
+    ? (validSummaries.reduce((acc, s) => acc + (getVal(s, 'reserve_margin') as number), 0) / validSummaries.length).toFixed(1)
     : '0'
   const avgRainfall = validSummaries.length
-    ? (validSummaries.reduce((acc, s) => acc + getVal(s, 'rainfall'), 0) / validSummaries.length).toFixed(1)
+    ? (validSummaries.reduce((acc, s) => acc + (getVal(s, 'rainfall') as number), 0) / validSummaries.length).toFixed(1)
     : '0'
 
   const topAqi = [...validSummaries]
-    .sort((a, b) => getVal(b, 'aqi') - getVal(a, 'aqi'))
+    .sort((a, b) => (getVal(b, 'aqi') as number) - (getVal(a, 'aqi') as number))
     .slice(0, 5)
 
   const lowReservoir = [...validSummaries]
-    .filter(s => getVal(s, 'reservoir_storage') > 0)
-    .sort((a, b) => getVal(a, 'reservoir_storage') - getVal(b, 'reservoir_storage'))
+    .filter(s => (getVal(s, 'reservoir_storage') as number) > 0)
+    .sort((a, b) => (getVal(a, 'reservoir_storage') as number) - (getVal(b, 'reservoir_storage') as number))
     .slice(0, 5)
-
-  const SEV_MAP: Record<string, 'low' | 'medium' | 'high' | 'danger'> = {
-    low: 'low', medium: 'medium', high: 'high', critical: 'danger',
-  }
 
   return (
     <div className="space-y-8 max-w-7xl">
@@ -70,16 +85,24 @@ export default async function DashboardPage() {
       {/* KPI Cards */}
       <div>
         <h3 className="text-lg font-semibold text-slate-700 mb-4">全台關鍵指標</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <MetricCard label="全台平均 AQI" value={avgAqi} icon={Wind} color="amber"
-            status={avgAqi > 100 ? 'danger' : avgAqi > 50 ? 'warning' : 'good'} />
-          <MetricCard label="全台即時用電" value={totalElectricity > 0 ? (totalElectricity / 1000).toFixed(1) : '-'} unit="GW" icon={Zap} color="sky" />
-          <MetricCard label="平均降雨量" value={avgRainfall} unit="mm" icon={CloudRain} color="violet" />
-          <MetricCard label="水庫平均蓄水率" value={avgReservoir} unit="%" icon={Droplets} color="emerald"
-            status={Number(avgReservoir) < 50 ? 'danger' : Number(avgReservoir) < 70 ? 'warning' : 'good'} />
-          <MetricCard label="平均備轉容量" value={avgMargin} unit="%" icon={Activity} color="emerald"
-            status={Number(avgMargin) < 6 ? 'danger' : Number(avgMargin) < 10 ? 'warning' : 'good'} />
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-xl border border-slate-200 p-5 h-28 animate-pulse bg-slate-100" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <MetricCard label="全台平均 AQI" value={avgAqi} icon={Wind} color="amber"
+              status={avgAqi > 100 ? 'danger' : avgAqi > 50 ? 'warning' : 'good'} />
+            <MetricCard label="全台即時用電" value={totalElectricity > 0 ? (totalElectricity / 1000).toFixed(1) : '-'} unit="GW" icon={Zap} color="sky" />
+            <MetricCard label="平均降雨量" value={avgRainfall} unit="mm" icon={CloudRain} color="violet" />
+            <MetricCard label="水庫平均蓄水率" value={avgReservoir} unit="%" icon={Droplets} color="emerald"
+              status={Number(avgReservoir) < 50 ? 'danger' : Number(avgReservoir) < 70 ? 'warning' : 'good'} />
+            <MetricCard label="平均備轉容量" value={avgMargin} unit="%" icon={Activity} color="emerald"
+              status={Number(avgMargin) < 6 ? 'danger' : Number(avgMargin) < 10 ? 'warning' : 'good'} />
+          </div>
+        )}
       </div>
 
       {/* Rankings */}
@@ -87,8 +110,9 @@ export default async function DashboardPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <h3 className="font-semibold text-slate-700 mb-4">AQI 最高城市 Top 5</h3>
           <div className="space-y-2">
-            {topAqi.map((s, i) => {
-              const aqi = getVal(s, 'aqi')
+            {loading && <div className="h-32 animate-pulse bg-slate-100 rounded-lg" />}
+            {!loading && topAqi.map((s, i) => {
+              const aqi = getVal(s, 'aqi') as number
               return (
                 <div key={s.city.code} className="flex items-center gap-3">
                   <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-red-500 text-white' : 'bg-slate-100 text-slate-600'}`}>{i + 1}</span>
@@ -106,15 +130,16 @@ export default async function DashboardPage() {
                 </div>
               )
             })}
-            {topAqi.length === 0 && <p className="text-slate-400 text-sm text-center py-4">暫無資料</p>}
+            {!loading && topAqi.length === 0 && <p className="text-slate-400 text-sm text-center py-4">暫無資料</p>}
           </div>
         </div>
 
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <h3 className="font-semibold text-slate-700 mb-4">水庫蓄水率最低城市 Top 5</h3>
           <div className="space-y-2">
-            {lowReservoir.map((s, i) => {
-              const rv = getVal(s, 'reservoir_storage')
+            {loading && <div className="h-32 animate-pulse bg-slate-100 rounded-lg" />}
+            {!loading && lowReservoir.map((s, i) => {
+              const rv = getVal(s, 'reservoir_storage') as number
               return (
                 <div key={s.city.code} className="flex items-center gap-3">
                   <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-red-500 text-white' : 'bg-slate-100 text-slate-600'}`}>{i + 1}</span>
@@ -132,7 +157,7 @@ export default async function DashboardPage() {
                 </div>
               )
             })}
-            {lowReservoir.length === 0 && <p className="text-slate-400 text-sm text-center py-4">暫無資料</p>}
+            {!loading && lowReservoir.length === 0 && <p className="text-slate-400 text-sm text-center py-4">暫無資料</p>}
           </div>
         </div>
       </div>
@@ -144,14 +169,15 @@ export default async function DashboardPage() {
           <Link href="/alerts" className="text-sky-500 text-sm hover:underline">查看全部</Link>
         </div>
         <div className="space-y-2">
-          {alerts.map(a => (
+          {loading && <div className="h-20 animate-pulse bg-slate-100 rounded-lg" />}
+          {!loading && alerts.map(a => (
             <AlertCard key={a.id}
               city={a.city_name_zh || '全台'}
               message={a.message || a.title}
               severity={SEV_MAP[a.severity] ?? 'low'}
               time={a.created_at?.slice(0, 16) ?? ''} />
           ))}
-          {alerts.length === 0 && <p className="text-slate-400 text-sm text-center py-4">目前無告警</p>}
+          {!loading && alerts.length === 0 && <p className="text-slate-400 text-sm text-center py-4">目前無告警</p>}
         </div>
       </div>
     </div>
