@@ -25,7 +25,8 @@
       "WebFetch(domain:www.hlbh.hlc.edu.tw)",
       "WebFetch(domain:hackmd.io)",
       "mcp__Claude_in_Chrome__tabs_context_mcp",
-      "WebFetch(domain:data.taipei)"
+      "WebFetch(domain:data.taipei)",
+      "Bash(copy \"D:\\\\7.Highlight\\\\1.Project\\\\5.web\\\\cities-insight\\\\public\\\\favicon.ico\" \"D:\\\\7.Highlight\\\\1.Project\\\\5.web\\\\cities-insight\\\\app\\\\favicon.ico\")"
     ]
   }
 }
