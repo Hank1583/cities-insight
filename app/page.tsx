@@ -21,7 +21,7 @@ export default function DashboardPage() {
       try {
         const [c, a] = await Promise.all([
           apiFetch<ApiCity[]>('/cities'),
-          apiFetch<ApiAlertLog[]>('/alerts?limit=4'),
+          apiFetch<ApiAlertLog[]>('/alerts/logs?limit=4').catch(() => []),
         ])
         setCities(c)
         setAlerts(a)

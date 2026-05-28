@@ -44,9 +44,19 @@ export default function AlertsPage() {
     apiFetch<ApiIndicator[]>('/indicators').then(data =>
       setIndicators(data.filter(i => ALERTABLE_INDICATORS.includes(i.code)))
     )
-    // 從 localStorage 讀上次輸入的 ID
-    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('lineUserId') : ''
-    if (saved) { setUserId(saved); setInputId(saved) }
+    // 優先讀 LINE OAuth 回調帶回的 uid（?uid=Uxxxx）
+    const params = new URLSearchParams(window.location.search)
+    const uidFromUrl = params.get('uid')
+    if (uidFromUrl) {
+      localStorage.setItem('lineUserId', uidFromUrl)
+      setUserId(uidFromUrl)
+      setInputId(uidFromUrl)
+      setTab('rules')
+      window.history.replaceState({}, '', '/alerts') // 清掉 URL 上的 uid
+    } else {
+      const saved = localStorage.getItem('lineUserId') ?? ''
+      if (saved) { setUserId(saved); setInputId(saved) }
+    }
   }, [])
 
   const loadData = useCallback(() => {
@@ -108,29 +118,51 @@ export default function AlertsPage() {
     <div className="max-w-4xl space-y-6">
       <PageHeader title="LINE 警示設定" subtitle="設定條件，達標時自動推播 LINE 通知" />
 
-      {/* LINE User ID 輸入區 */}
+      {/* LINE 登入 / 身份區 */}
       <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex items-center gap-3 mb-4">
           <MessageSquare className="w-5 h-5 text-sky-500" />
-          <h3 className="font-semibold text-slate-700">你的 LINE User ID</h3>
-          {userId && <span className="ml-auto text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">已綁定</span>}
+          <h3 className="font-semibold text-slate-700">LINE 帳號</h3>
+          {userId && <span className="ml-auto text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">已登入</span>}
         </div>
-        <div className="flex gap-2">
-          <input
-            value={inputId} onChange={e => setInputId(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && confirmId()}
-            placeholder="貼上你的 LINE User ID（Uxxxxxxxxxxxx）"
-            className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 outline-none focus:border-sky-400"
-          />
-          <button onClick={confirmId}
-            className="px-4 py-2 bg-sky-500 text-white rounded-lg text-sm font-medium hover:bg-sky-600 transition-colors">
-            確認
-          </button>
-        </div>
-        {!userId && (
-          <p className="text-xs text-slate-400 mt-2">
-            不知道 ID？加 LINE Bot 好友後傳「ID」，Bot 會回覆你的 User ID。
-          </p>
+
+        {!userId ? (
+          <div className="space-y-3">
+            {/* 主要：LINE 登入按鈕 */}
+            <a
+              href="https://liff.line.me/1654243071-qaFTJv1S"
+              className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#06C755] hover:bg-[#05b34c] text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <MessageSquare className="w-4 h-4" />
+              透過 LINE 登入
+            </a>
+            {/* 備援：手動輸入 */}
+            <details className="text-xs text-slate-400">
+              <summary className="cursor-pointer hover:text-slate-600 select-none">手動輸入 User ID</summary>
+              <div className="flex gap-2 mt-2">
+                <input
+                  value={inputId} onChange={e => setInputId(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && confirmId()}
+                  placeholder="Uxxxxxxxxxxxx"
+                  className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 outline-none focus:border-sky-400"
+                />
+                <button onClick={confirmId}
+                  className="px-4 py-2 bg-slate-700 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors">
+                  確認
+                </button>
+              </div>
+            </details>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-slate-500 font-mono truncate max-w-xs">{userId}</span>
+            <button
+              onClick={() => { localStorage.removeItem('lineUserId'); setUserId(''); setInputId(''); setTab('guide') }}
+              className="text-xs text-slate-400 hover:text-red-500 transition-colors ml-4 flex-shrink-0"
+            >
+              登出
+            </button>
+          </div>
         )}
       </div>
 

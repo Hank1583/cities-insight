@@ -26,7 +26,15 @@
       "WebFetch(domain:hackmd.io)",
       "mcp__Claude_in_Chrome__tabs_context_mcp",
       "WebFetch(domain:data.taipei)",
-      "Bash(copy \"D:\\\\7.Highlight\\\\1.Project\\\\5.web\\\\cities-insight\\\\public\\\\favicon.ico\" \"D:\\\\7.Highlight\\\\1.Project\\\\5.web\\\\cities-insight\\\\app\\\\favicon.ico\")"
+      "Bash(copy \"D:\\\\7.Highlight\\\\1.Project\\\\5.web\\\\cities-insight\\\\public\\\\favicon.ico\" \"D:\\\\7.Highlight\\\\1.Project\\\\5.web\\\\cities-insight\\\\app\\\\favicon.ico\")",
+      "WebFetch(domain:opdadm.moi.gov.tw)",
+      "WebFetch(domain:sowf.moi.gov.tw)",
+      "WebFetch(domain:www.ris.gov.tw)",
+      "WebFetch(domain:statdb.dgbas.gov.tw)",
+      "Bash(Get-ChildItem -Path \"D:\\\\7.Highlight\\\\1.Project\\\\5.web\\\\cities-insight\" -Force)",
+      "Bash(Select-Object Name, Mode)",
+      "Bash(ls \"D:\\\\7.Highlight\\\\1.Project\\\\4.php\\\\\")",
+      "Bash(dir \"D:\\\\7.Highlight\\\\1.Project\\\\4.php\\\\lineBot\")"
     ]
   }
 }

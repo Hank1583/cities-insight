@@ -8,6 +8,10 @@ const DEFAULT_CITIES = ['taipei', 'taichung', 'kaohsiung', 'tainan', 'taoyuan']
 const DEFAULT_INDICATOR = 'aqi'
 // electricity_load / reserve_margin 是全國指標，各縣市數值相同，不適合城市比較
 const COMPARE_INDICATORS = ['aqi', 'pm25', 'weather_temp', 'rainfall', 'reservoir_storage', 'electricity_monthly']
+// 在比較頁覆寫顯示名稱（因為是歷史區間資料，非即時）
+const DISPLAY_NAME: Record<string, string> = {
+  weather_temp: '歷史氣溫',
+}
 
 export default function ComparePage() {
   const [cities, setCities] = useState<ApiCity[]>([])
@@ -63,7 +67,7 @@ export default function ComparePage() {
               return (
                 <button key={code} onClick={() => setIndicator(code)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${indicator === code ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                  {ind?.name_zh ?? code}
+                  {DISPLAY_NAME[code] ?? ind?.name_zh ?? code}
                 </button>
               )
             })}
@@ -108,7 +112,7 @@ export default function ComparePage() {
       {!loading && compareData && Object.keys(compareData.series).length > 0 && (
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <h3 className="font-semibold text-slate-700 mb-4">
-            {indicatorInfo?.name_zh ?? indicator} 比較
+            {DISPLAY_NAME[indicator] ?? indicatorInfo?.name_zh ?? indicator} 比較
             {indicator === 'electricity_monthly' ? ' — 近 12 個月' : ` — 近 ${range} 天`}
             <span className="text-sm font-normal text-slate-400 ml-2">({indicatorInfo?.unit})</span>
           </h3>

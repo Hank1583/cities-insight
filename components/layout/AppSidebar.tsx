@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import {
   LayoutDashboard, MapPin, GitCompare, BarChart2,
-  Bell, FileText
+  Bell
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -13,7 +13,6 @@ const NAV_ITEMS = [
   { href: '/compare', label: '城市比較', icon: GitCompare },
   { href: '/indicators', label: '指標列表', icon: BarChart2 },
   { href: '/alerts', label: '示警', icon: Bell },
-  { href: '/reports', label: '週報', icon: FileText },
 ]
 
 export default function AppSidebar() {
