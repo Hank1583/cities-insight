@@ -1,4 +1,6 @@
 import { MetadataRoute } from 'next'
+
+export const dynamic = 'force-static'
 import { CITIES } from '@/lib/mock/cities'
 import { INDICATORS } from '@/lib/mock/indicators'
 
