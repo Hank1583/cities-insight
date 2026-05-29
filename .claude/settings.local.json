@@ -34,7 +34,8 @@
       "Bash(Get-ChildItem -Path \"D:\\\\7.Highlight\\\\1.Project\\\\5.web\\\\cities-insight\" -Force)",
       "Bash(Select-Object Name, Mode)",
       "Bash(ls \"D:\\\\7.Highlight\\\\1.Project\\\\4.php\\\\\")",
-      "Bash(dir \"D:\\\\7.Highlight\\\\1.Project\\\\4.php\\\\lineBot\")"
+      "Bash(dir \"D:\\\\7.Highlight\\\\1.Project\\\\4.php\\\\lineBot\")",
+      "Bash(move \"D:\\\\7.Highlight\\\\1.Project\\\\5.web\\\\cities-insight\\\\googled6ec47de5d1dfc53.html\" \"D:\\\\7.Highlight\\\\1.Project\\\\5.web\\\\cities-insight\\\\public\\\\googled6ec47de5d1dfc53.html\")"
     ]
   }
 }

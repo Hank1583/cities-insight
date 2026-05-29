@@ -8,6 +8,23 @@ export const metadata: Metadata = {
   title: 'Cities Insight - Taiwan Urban Data Platform',
   description: '探索台灣各縣市的環境、能源、水資源與經濟趨勢',
   icons: { icon: '/logo.svg' },
+  openGraph: {
+    title: 'Cities Insight - Taiwan Urban Data Platform',
+    description: '探索台灣各縣市的環境、能源、水資源與經濟趨勢',
+    url: 'https://cities.highlightsignal.com',
+    siteName: 'Cities Insight',
+    locale: 'zh_TW',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Cities Insight - Taiwan Urban Data Platform',
+    description: '探索台灣各縣市的環境、能源、水資源與經濟趨勢',
+  },
+  metadataBase: new URL('https://cities.highlightsignal.com'),
+  verification: {
+    google: 'd6ec47de5d1dfc53',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
