@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import './globals.css'
 import AppSidebar from '@/components/layout/AppSidebar'
 import TopNavbar from '@/components/layout/TopNavbar'
@@ -12,6 +13,20 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-TW">
+      <head>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-JSN1T7F9KG"
+          strategy="afterInteractive"
+        />
+        <Script id="ga4-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-JSN1T7F9KG');
+          `}
+        </Script>
+      </head>
       <body className="flex h-screen overflow-hidden bg-slate-50">
         <AppSidebar />
         <div className="flex flex-col flex-1 overflow-hidden">
