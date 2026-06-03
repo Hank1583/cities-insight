@@ -35,7 +35,17 @@
       "Bash(Select-Object Name, Mode)",
       "Bash(ls \"D:\\\\7.Highlight\\\\1.Project\\\\4.php\\\\\")",
       "Bash(dir \"D:\\\\7.Highlight\\\\1.Project\\\\4.php\\\\lineBot\")",
-      "Bash(move \"D:\\\\7.Highlight\\\\1.Project\\\\5.web\\\\cities-insight\\\\googled6ec47de5d1dfc53.html\" \"D:\\\\7.Highlight\\\\1.Project\\\\5.web\\\\cities-insight\\\\public\\\\googled6ec47de5d1dfc53.html\")"
+      "Bash(move \"D:\\\\7.Highlight\\\\1.Project\\\\5.web\\\\cities-insight\\\\googled6ec47de5d1dfc53.html\" \"D:\\\\7.Highlight\\\\1.Project\\\\5.web\\\\cities-insight\\\\public\\\\googled6ec47de5d1dfc53.html\")",
+      "Bash(Get-ChildItem -Path \"D:\\\\7.Highlight\\\\1.Project\\\\5.web\\\\cities-insight\" -Recurse -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object FullName)",
+      "Bash(Get-ChildItem -Path \"D:\\\\7.Highlight\\\\1.Project\\\\4.php\\\\cities-insight\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Bash(find \"D:/7.Highlight/1.Project/4.php/cities-insight\" -type d | head -50)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\TDG-ENG-05\\\\.claude\\\\projects\\\\D--7-Highlight-1-Project-5-web-cities-insight\\\\memory\")",
+      "Bash(Get-ChildItem \"D:\\\\7.Highlight\\\\1.Project\\\\4.php\\\\cities-insight\\\\cron\")",
+      "Bash(Select-Object Name, Length)",
+      "Bash(npx tsc *)"
     ]
   }
 }

@@ -7,6 +7,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/compare': '城市比較',
   '/indicators': '指標列表',
   '/alerts': '示警設定',
+  '/reports': '月報',
 }
 
 export default function TopNavbar() {

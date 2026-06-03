@@ -29,6 +29,12 @@ body {
   box-sizing: border-box;
 }
 
+@media print {
+  aside, header, nav, .print\:hidden { display: none !important; }
+  body { background: white; }
+  main { padding: 0 !important; }
+}
+
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }

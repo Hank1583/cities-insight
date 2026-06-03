@@ -86,6 +86,33 @@ export interface ApiAlertLog {
   condition_type: string
 }
 
+export interface ApiReportIndicator {
+  name_zh: string
+  unit: string
+  monthly_avg: number | null
+  prev_avg: number | null
+  change_pct: number | null
+  trend: 'up' | 'down' | 'stable'
+  level: string | null
+  peak_value: number | null
+  peak_date: string | null
+  data_days: number
+}
+
+export interface ApiReportContent {
+  generated_at: string
+  period: { year: number; month: number; label: string }
+  city: { code: string; name_zh: string }
+  summary: { headline: string; alert_count: number }
+  indicators: Record<string, ApiReportIndicator>
+  alerts_summary: { indicator: string; indicator_name_zh: string; count: number }[]
+  rankings: Record<string, { rank: number; total: number }>
+}
+
+export interface ApiReportDetail extends ApiReport {
+  content: ApiReportContent
+}
+
 export interface ApiReport {
   id: number
   report_type: string
